@@ -1,3 +1,5 @@
+from django.shortcuts import get_object_or_404
+
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -26,22 +28,33 @@ class  CreateAuthor(APIView):
     permission_classes = (AllowAny,)
 
     def post(self,request):
-        author_obj=Author.objects.create(
-            first_name=request.data.get('first_name',''),
-            last_name=request.data.get('last_name',''),
-            birth_date=request.data.get('birth_date',''),
-        )
-        return Response({'message':'Creado'}, status=status.HTTP_201_CREATED)
+        data=request.data
+        serializer=AuthorSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class  CreateBook(APIView):
     permission_classes = (AllowAny,)
 
     def post(self,request):
-        book_obj=Book.objects.create(
-            name=request.data.get('name',''),
-            isbn=request.data.get('isbn',''),
-            publisher_date=request.data.get('publisher_date','1700-01-01'),
-            author_id=request.data.get('author_id',1),
+        serializer=BookSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        )
-        return Response({'message':'Creado'}, status=status.HTTP_201_CREATED)
+class  RetrieveAuthorAPIView(APIView):
+    permission_classes = (AllowAny,)
+
+    def get(self,request,author_id):
+        author_obj=Author.objects.get(id=author_id)
+        serializer=AuthorSerializer(author_obj)
+        return Response(serializer.data)
+
+class  RetrieveBookAPIView(APIView):
+    permission_classes = (AllowAny,)
+
+    def get(self,request,book_id):
+        book_obj=get_object_or_404(Book, pk=book_id)
+        serializer=BookSerializer(book_obj)
+        return Response(serializer.data)
